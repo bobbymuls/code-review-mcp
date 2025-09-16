@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "code-review-mcp": {
+      "command": "python",
+      "args": ["-m", "code_review_mcp.server"],
+      "env": {}
+    }
+  }
+}
