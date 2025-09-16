@@ -29,6 +29,9 @@ test_mcp_connection.py
 quick_test.py
 alternative_mcp_config.json
 
+# Internal documentation
+DISTRIBUTION.md
+
 # Virtual environments
 venv/
 env/
