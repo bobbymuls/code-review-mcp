@@ -22,6 +22,13 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Development files
+*_backup.py
+*_fixed.py
+test_mcp_connection.py
+quick_test.py
+alternative_mcp_config.json
+
 # Virtual environments
 venv/
 env/
