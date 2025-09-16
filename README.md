@@ -17,17 +17,29 @@ pip install git+https://github.com/bobbymuls/code-review-mcp.git
 
 1. **Open Cursor Settings** (Ctrl+, or Cmd+,)
 2. **Navigate to**: `MCP & Integrations` → `New MCP Server`
-3. **Add this configuration**:
+3. **Find your Python path**:
+   ```bash
+   # Find where Python is installed
+   which python   # macOS/Linux
+   where python   # Windows
+   ```
+
+4. **Add this configuration** (using your Python path):
 
 ```json
 {
   "code-review-mcp": {
-    "command": "python",
+    "command": "/full/path/to/your/python",
     "args": ["-m", "code_review_mcp.server"],
     "env": {}
   }
 }
 ```
+
+**Example paths**:
+- **Windows**: `"C:\\Python311\\python.exe"` or `"C:\\Users\\YourName\\AppData\\Local\\Programs\\Python\\Python311\\python.exe"`
+- **macOS**: `"/usr/local/bin/python3"` or `"/opt/homebrew/bin/python3"`
+- **Linux**: `"/usr/bin/python3"` or `"/home/username/.local/bin/python"`
 
 ### Step 3: Restart Cursor & Start Coding!
 
@@ -105,31 +117,45 @@ Once installed, simply chat with Cursor using these prompts:
 
 ---
 
-## 🛠️ Advanced Installation Options
+## 🛠️ Installation & Configuration Options
 
-### Option 1: Quick Install (Recommended)
+### Option 1: System Python (Simplest)
 ```bash
+# Install globally
 pip install git+https://github.com/bobbymuls/code-review-mcp.git
+
+# Find Python path
+where python    # Windows
+which python    # macOS/Linux
+
+# Use the full path in Cursor config
 ```
 
-### Option 2: Development Install
+### Option 2: Virtual Environment (Recommended for Development)
 ```bash
 git clone https://github.com/bobbymuls/code-review-mcp.git
 cd code-review-mcp
 python -m venv venv
 
-# Windows
-venv\Scripts\activate
-
-# macOS/Linux  
-source venv/bin/activate
+# Activate virtual environment
+venv\Scripts\activate          # Windows
+source venv/bin/activate       # macOS/Linux
 
 pip install -e .
 ```
 
-### Option 3: Global Install (For System Python)
+**For virtual environment, use the venv Python path in Cursor**:
+- **Windows**: `"C:\\path\\to\\project\\venv\\Scripts\\python.exe"`
+- **macOS/Linux**: `"/path/to/project/venv/bin/python"`
+
+### Option 3: Conda Environment
 ```bash
-pip install --user git+https://github.com/bobbymuls/code-review-mcp.git
+conda create -n code-review python=3.11
+conda activate code-review
+pip install git+https://github.com/bobbymuls/code-review-mcp.git
+
+# Find conda Python path
+conda info --envs
 ```
 
 ---
@@ -141,7 +167,7 @@ pip install --user git+https://github.com/bobbymuls/code-review-mcp.git
 2. Go to `MCP & Integrations`
 3. Click `+ New MCP Server`
 4. Name: `code-review-mcp`
-5. Command: `python`
+5. Command: `/full/path/to/your/python` (see examples below)
 6. Args: `["-m", "code_review_mcp.server"]`
 
 ### Method 2: Direct Config File
@@ -153,7 +179,7 @@ pip install --user git+https://github.com/bobbymuls/code-review-mcp.git
 {
   "mcpServers": {
     "code-review-mcp": {
-      "command": "python",
+      "command": "/full/path/to/your/python",
       "args": ["-m", "code_review_mcp.server"],
       "env": {}
     }
@@ -198,9 +224,9 @@ Check Cursor's MCP settings - you should see:
 
 ### ❌ "No tools or prompts" in Cursor
 **Solutions:**
-1. **Restart Cursor completely** (close all windows)
-2. **Check Python path**: Run `which python` or `where python`
-3. **Use full Python path** in config instead of just `python`
+1. **Use full Python path**: Most common issue! Replace `"python"` with full path like `"C:\\Python311\\python.exe"`
+2. **Check Python path**: Run `which python` (macOS/Linux) or `where python` (Windows)
+3. **Restart Cursor completely** (close all windows) after config changes
 4. **Verify installation**: Run `python -c "import code_review_mcp.server; print('✅ Working')"`
 
 ### ❌ "Module not found" error
