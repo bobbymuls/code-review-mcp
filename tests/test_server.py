@@ -1,50 +1,54 @@
 """Tests for the MCP server functionality."""
 
 import pytest
-from code_review_mcp.server import CodeReviewServer, CodeIssue
+from code_review_mcp.server import (
+    CodeIssue, 
+    detect_language, 
+    analyze_syntax, 
+    analyze_security_issues,
+    analyze_performance_issues,
+    calculate_metrics,
+    get_code_info
+)
 
 
 class TestCodeReviewServer:
-    """Test cases for CodeReviewServer."""
-
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.server = CodeReviewServer()
+    """Test cases for code review functionality."""
 
     def test_detect_language_python(self):
         """Test Python language detection."""
         # Test by file extension
-        language = self.server._detect_language("test.py", "")
+        language = detect_language("test.py", "")
         assert language == "python"
         
         # Test by content
-        python_code = "def hello():\n    print('Hello, world!')"
-        language = self.server._detect_language(None, python_code)
+        python_code = "import os\ndef hello():\n    print('Hello, world!')"
+        language = detect_language(None, python_code)
         assert language == "python"
 
     def test_detect_language_javascript(self):
         """Test JavaScript language detection."""
         # Test by file extension
-        language = self.server._detect_language("test.js", "")
+        language = detect_language("test.js", "")
         assert language == "javascript"
         
         # Test by content
         js_code = "function hello() { console.log('Hello'); }"
-        language = self.server._detect_language(None, js_code)
+        language = detect_language(None, js_code)
         assert language == "javascript"
 
     @pytest.mark.asyncio
     async def test_analyze_syntax_valid_python(self):
         """Test syntax analysis with valid Python code."""
         code = "def hello():\n    return 'Hello, world!'"
-        issues = await self.server._analyze_syntax(code, "python")
+        issues = await analyze_syntax(code, "python")
         assert len(issues) == 0
 
     @pytest.mark.asyncio
     async def test_analyze_syntax_invalid_python(self):
         """Test syntax analysis with invalid Python code."""
         code = "def hello(\n    return 'Hello, world!'"  # Missing closing parenthesis
-        issues = await self.server._analyze_syntax(code, "python")
+        issues = await analyze_syntax(code, "python")
         assert len(issues) > 0
         assert issues[0].severity == "critical"
         assert issues[0].category == "bug"
@@ -58,7 +62,7 @@ def dangerous_function():
     password = "hardcoded_password"
     return True
 """
-        issues = await self.server._analyze_security(code, "python")
+        issues = await analyze_security_issues(code, "python")
         
         # Should find eval() and hardcoded password issues
         assert len(issues) >= 2
@@ -84,7 +88,7 @@ def inefficient_function():
             items += [i]  # Inefficient list concatenation
     return items
 """
-        issues = await self.server._analyze_performance(code, "python")
+        issues = await analyze_performance_issues(code, "python")
         
         # Should find the inefficient list concatenation
         concat_issues = [issue for issue in issues if "concatenation" in issue.message.lower()]
@@ -104,7 +108,7 @@ class TestClass:
 def function1():
     pass
 """
-        metrics = self.server._calculate_metrics(code, "python")
+        metrics = calculate_metrics(code, "python")
         
         assert metrics["total_lines"] == 10
         assert metrics["comment_lines"] == 1
@@ -129,13 +133,13 @@ def function1():
 
     @pytest.mark.asyncio
     async def test_get_code_info_with_content(self):
-        """Test _get_code_info with direct code content."""
+        """Test get_code_info with direct code content."""
         arguments = {
             "code_content": "print('Hello')",
             "language": "python"
         }
         
-        code_content, file_path, language = await self.server._get_code_info(arguments)
+        code_content, file_path, language = await get_code_info(arguments)
         
         assert code_content == "print('Hello')"
         assert file_path is None
@@ -143,13 +147,13 @@ def function1():
 
     @pytest.mark.asyncio
     async def test_get_code_info_with_file_path(self):
-        """Test _get_code_info with file path."""
+        """Test get_code_info with file path."""
         arguments = {
             "file_path": "nonexistent.py",
             "language": "python"
         }
         
-        code_content, file_path, language = await self.server._get_code_info(arguments)
+        code_content, file_path, language = await get_code_info(arguments)
         
         assert code_content == ""  # File doesn't exist
         assert file_path == "nonexistent.py"
