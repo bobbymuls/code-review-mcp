@@ -8,6 +8,7 @@ performance problems, and code quality improvements.
 
 import asyncio
 import ast
+import os
 import re
 import sys
 from pathlib import Path
@@ -145,9 +146,14 @@ async def get_code_info(arguments: dict) -> tuple[str, Optional[str], Optional[s
     # If file_path is provided but no code_content, try to read the file
     if file_path and not code_content:
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            # Convert to absolute path and handle Windows path separators
+            abs_file_path = os.path.abspath(file_path)
+            # Replace single backslashes with double backslashes for Windows compatibility
+            normalized_path = abs_file_path.replace('\\', '\\\\')
+            
+            with open(abs_file_path, 'r', encoding='utf-8') as f:
                 code_content = f.read()
-        except Exception:
+        except Exception as e:
             # File might not exist or not readable
             pass
     
