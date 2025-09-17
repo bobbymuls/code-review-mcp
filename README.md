@@ -605,15 +605,3 @@ We love contributions! Here's how to get started:
 ## 📄 License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Anthropic** for the MCP protocol
-- **Cursor Team** for the amazing IDE
-- **Open Source Community** for inspiration and contributions
-
----
-
-**⭐ If this tool helps you catch bugs, please star the repository!**
-
-Made with ❤️ by developers, for developers.
