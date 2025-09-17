@@ -137,6 +137,34 @@ async def handle_call_tool(
         raise ValueError(f"Unknown tool: {name}")
 
 
+def find_workspace_root(start_path: str = None) -> str:
+    """Find the workspace root by looking for common project markers."""
+    if start_path is None:
+        # Start from the directory containing this server.py file
+        start_path = os.path.dirname(os.path.abspath(__file__))
+    
+    current_path = os.path.abspath(start_path)
+    
+    # Common project markers to look for
+    markers = ['.git', 'pyproject.toml', 'setup.py', 'requirements.txt', 'mcp.json', '.gitignore']
+    
+    while current_path != os.path.dirname(current_path):  # Not at root
+        for marker in markers:
+            if os.path.exists(os.path.join(current_path, marker)):
+                return current_path
+        current_path = os.path.dirname(current_path)
+    
+    # Fallback: go up from server.py location to find project root
+    # server.py is in src/code_review_mcp/, so project root is 2 levels up
+    server_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(server_dir))
+    if os.path.exists(os.path.join(project_root, 'pyproject.toml')):
+        return project_root
+    
+    # Final fallback to current working directory
+    return os.getcwd()
+
+
 async def get_code_info(arguments: dict) -> tuple[str, Optional[str], Optional[str]]:
     """Extract code content and metadata from arguments."""
     code_content = arguments.get("code_content", "")
@@ -146,10 +174,16 @@ async def get_code_info(arguments: dict) -> tuple[str, Optional[str], Optional[s
     # If file_path is provided but no code_content, try to read the file
     if file_path and not code_content:
         try:
-            # Convert to absolute path and handle Windows path separators
-            abs_file_path = os.path.abspath(file_path)
-            # Replace single backslashes with double backslashes for Windows compatibility
-            normalized_path = abs_file_path.replace('\\', '\\\\')
+            # Handle both absolute and relative paths
+            if os.path.isabs(file_path):
+                abs_file_path = file_path
+            else:
+                # For relative paths, resolve from workspace root
+                workspace_root = find_workspace_root()
+                abs_file_path = os.path.join(workspace_root, file_path)
+            
+            # Normalize the path for the current OS
+            abs_file_path = os.path.normpath(abs_file_path)
             
             with open(abs_file_path, 'r', encoding='utf-8') as f:
                 code_content = f.read()
@@ -407,9 +441,23 @@ async def review_code(arguments: dict) -> list[types.TextContent]:
         code_content, file_path, language = await get_code_info(arguments)
         
         if not code_content:
+            # Provide more detailed error information
+            error_msg = "Error: No code content provided or file not found."
+            if file_path:
+                if os.path.isabs(file_path):
+                    error_msg += f"\nTried absolute path: {file_path}"
+                else:
+                    workspace_root = find_workspace_root()
+                    attempted_path = os.path.normpath(os.path.join(workspace_root, file_path))
+                    error_msg += f"\nTried relative path: {file_path}"
+                    error_msg += f"\nWorkspace root detected as: {workspace_root}"
+                    error_msg += f"\nResolved to: {attempted_path}"
+                    error_msg += f"\nFile exists: {os.path.exists(attempted_path)}"
+                    error_msg += f"\nCurrent working directory: {os.getcwd()}"
+            
             return [types.TextContent(
                 type="text",
-                text="Error: No code content provided or file not found."
+                text=error_msg
             )]
         
         # Detect language if not provided

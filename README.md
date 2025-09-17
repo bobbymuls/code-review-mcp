@@ -83,22 +83,30 @@ Once installed, simply chat with Cursor using these prompts:
 ### 🔍 **General Code Review**
 ```
 "Please review this code for any issues"
+"Review the file src/components/Button.tsx"
 ```
 
 ### 🔒 **Security-Focused Analysis**  
 ```
 "Check this code for security vulnerabilities"
+"Analyze security issues in src/auth/login.py"
 ```
 
 ### ⚡ **Performance Analysis**
 ```
 "Analyze this code for performance improvements"
+"Check performance of utils/data-processing.js"
 ```
 
-### 🎯 **Specific Language**
+### 🎯 **File Path Support**
+The server now supports both **absolute** and **relative** file paths:
 ```
-"Review this Python/JavaScript/Java code"
+"Review /full/path/to/file.py"           # Absolute path
+"Review src/components/Header.tsx"       # Relative to workspace root
+"Review ./utils/helpers.js"              # Relative to current directory
 ```
+
+**✨ Smart Workspace Detection**: Automatically finds your project root by looking for `.git`, `pyproject.toml`, `package.json`, and other common project markers.
 
 ---
 
@@ -212,6 +220,12 @@ Ask Cursor:
 
 **Expected Result**: Should detect critical security issues (hardcoded password + code injection)
 
+### File Path Test
+Test relative path support:
+> "Review the file src/code_review_mcp/server.py"
+
+**Expected Result**: Should successfully analyze the server file using relative path from workspace root
+
 ### Verify Tools Available
 Check Cursor's MCP settings - you should see:
 - ✅ `review_code` - Complete code analysis
@@ -240,6 +254,12 @@ Check Cursor's MCP settings - you should see:
 1. **Check configuration**: Ensure JSON syntax is correct (no trailing commas)
 2. **Restart Cursor**: Full restart after config changes
 3. **Check logs**: Look for error messages in Cursor's developer console
+
+### ❌ "File not found" with relative paths
+**Solutions:**
+1. **Use workspace-relative paths**: Ensure paths are relative to your project root (where `.git`, `pyproject.toml`, etc. are located)
+2. **Check workspace detection**: The server automatically detects your workspace root using common project markers
+3. **Try absolute paths**: If relative paths fail, use full absolute paths as a fallback
 
 ### 🔍 Get Help
 - **GitHub Issues**: [Report bugs here](https://github.com/bobbymuls/code-review-mcp/issues)
