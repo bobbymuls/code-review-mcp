@@ -6,5 +6,5 @@ and bug detection capabilities for various programming languages.
 """
 
 __version__ = "0.2.0"
-__author__ = "Bobby"
-__email__ = "your-email@example.com"
+__author__ = "Bobby Muljono"
+__email__ = "bobbymul93@gmail.com"

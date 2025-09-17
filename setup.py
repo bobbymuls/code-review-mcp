@@ -17,8 +17,8 @@ requirements = [
 setup(
     name="code-review-mcp",
     version="0.2.0",
-    author="Bobby",
-    author_email="your-email@example.com",
+    author="Bobby Muljono",
+    author_email="bobbymul93@gmail.com",
     description="MCP server for automated code review and bug detection",
     long_description=long_description,
     long_description_content_type="text/markdown",
