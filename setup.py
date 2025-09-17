@@ -16,7 +16,7 @@ requirements = [
 
 setup(
     name="code-review-mcp",
-    version="0.1.0",
+    version="0.2.0",
     author="Bobby",
     author_email="your-email@example.com",
     description="MCP server for automated code review and bug detection",
@@ -26,7 +26,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
