@@ -144,16 +144,6 @@ Once installed, simply chat with Cursor using these prompts:
 "Analyze performance of utils/data-processing.js"
 ```
 
-### 🎯 **File Path Support**
-The server now supports both **absolute** and **relative** file paths:
-```
-"Review /full/path/to/file.py"           # Absolute path
-"Review src/components/Header.tsx"       # Relative to workspace root
-"Review ./utils/helpers.js"              # Relative to current directory
-```
-
-**✨ Smart Workspace Detection**: Automatically finds your project root by looking for `.git`, `pyproject.toml`, `package.json`, and other common project markers.
-
 ---
 
 ## 🌍 Language Support
@@ -358,60 +348,205 @@ Check Cursor's MCP settings - you should see:
 3. **Try absolute paths**: If relative paths fail, use full absolute paths as a fallback
 
 ### 🔍 Get Help
-- **GitHub Issues**: [Report bugs here](https://github.com/bobbymuls/code-review-mcp/issues)
-- **Discussions**: [Ask questions here](https://github.com/bobbymuls/code-review-mcp/discussions)
+- **GitHub Issues**: [Report bugs/suggestions here](https://github.com/bobbymuls/code-review-mcp/issues)
 
 ---
 
 ## 🎯 Example Use Cases
 
-### 🔒 **Security Review**
+The Code Review MCP Server provides **5 specialized analysis tools**, each designed for specific code review needs:
+
+- **`review_code`** - Comprehensive analysis combining all checks
+- **`analyze_security`** - Focused security vulnerability assessment  
+- **`analyze_llm_invoke`** - LLM integration and prompt engineering critique
+- **`analyze_api_handling`** - API calls, timeouts, and retry strategy analysis
+- **`check_performance`** - Performance bottlenecks and DataFrame optimization
+
+> 💡 **Pro Tip**: Use the specialized tools when you want focused analysis, or `review_code` for comprehensive assessment!
+
+### 🔒 **Security Analysis** (`analyze_security`)
 ```python
 # Before (vulnerable)
-def login(user_input):
-    eval(f"user = '{user_input}'")  # Code injection!
+import os
+import pickle
+
+api_key = "sk-1234567890abcdef"  # ❌ Hardcoded API key detected
+password = "admin123"           # ❌ Hardcoded password detected
+
+def execute_command(user_input):
+    os.system(f"ls {user_input}")  # ❌ Command injection vulnerability
     return True
 
-# After (secure)  
-def login(user_input):
-    user = str(user_input)  # Safe string conversion
-    return True
+def load_data(data):
+    return pickle.loads(data)  # ❌ Pickle deserialization can be unsafe
+
+# After (secure)
+import os
+import json
+import subprocess
+
+api_key = os.getenv("API_KEY")  # ✅ Environment variable
+password = os.getenv("PASSWORD")  # ✅ Environment variable
+
+def execute_command(user_input):
+    # ✅ Safe subprocess with shell=False
+    result = subprocess.run(["ls", user_input], capture_output=True, text=True)
+    return result.stdout
+
+def load_data(data):
+    return json.loads(data)  # ✅ Safe JSON deserialization
 ```
 
-### ⚡ **Performance Optimization**
+### ⚡ **Performance Optimization** (`check_performance`)
 ```python
-# Before (slow)
+# Before (slow DataFrame operations)
+import pandas as pd
+
+# ❌ Very slow iterrows() usage
+total = 0
+for index, row in df.iterrows():
+    total += row['value']
+
+# ❌ Inefficient DataFrame.append() in loop
+result_df = pd.DataFrame()
+for item in data:
+    new_row = pd.DataFrame([item])
+    result_df = result_df.append(new_row)
+
+# ❌ List concatenation with +=
 items = []
 for i in range(1000):
     items += [i]  # O(n²) complexity!
 
 # After (fast)
+import pandas as pd
+
+# ✅ Vectorized operation
+total = df['value'].sum()
+
+# ✅ Collect data first, then create DataFrame
+result_df = pd.DataFrame(data)
+
+# ✅ List comprehension or extend()
 items = [i for i in range(1000)]  # O(n) complexity
+# or use extend(): items.extend(range(1000))
 ```
 
-### 🐛 **Bug Detection**
+### 🌐 **API Handling Analysis** (`analyze_api_handling`)
 ```python
-# Before (buggy)
-def divide(a, b):
-    return a / b  # ZeroDivisionError!
+# Before (unreliable API calls)
+import requests
 
-# After (safe)
-def divide(a, b):
-    if b == 0:
-        raise ValueError("Cannot divide by zero")
-    return a / b
+def fetch_data(url):
+    # ❌ No timeout - potential hanging requests
+    # ❌ No status code checking
+    # ❌ No error handling
+    response = requests.get(url)
+    return response.json()
+
+def retry_request(url):
+    while True:  # ❌ Potential infinite retry loop
+        try:
+            return requests.get(url).json()
+        except:
+            time.sleep(5)  # ❌ Fixed sleep - no exponential backoff
+
+# After (robust API calls)
+import requests
+import time
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+def fetch_data(url, timeout=30):
+    try:
+        # ✅ Proper timeout and status checking
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()  # ✅ Check status codes
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed: {e}")
+        return None
+
+def retry_request(url, max_retries=3):
+    session = requests.Session()
+    # ✅ Exponential backoff retry strategy
+    retry_strategy = Retry(
+        total=max_retries,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    
+    try:
+        response = session.get(url, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed after {max_retries} retries: {e}")
+        return None
+```
+
+### 🤖 **LLM Integration Analysis** (`analyze_llm_invoke`)
+```python
+# Before (unsafe LLM usage)
+import openai
+
+def chat_with_ai(user_input):
+    # ❌ User input directly in prompt - prompt injection risk
+    prompt = f"Answer this question: {user_input}"
+    
+    # ❌ Very high max_tokens - cost implications
+    # ❌ No system message for guidance
+    response = openai.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=8000,
+        temperature=0.7
+    )
+    
+    # ❌ No response validation or stripping
+    return response.choices[0].message.content
+
+# After (secure LLM usage)
+import openai
+import re
+
+def sanitize_input(user_input):
+    # ✅ Input validation and sanitization
+    cleaned = re.sub(r'[^\w\s\-\.\?\!]', '', user_input)
+    return cleaned[:500]  # Limit length
+
+def chat_with_ai(user_input):
+    # ✅ Sanitize user input
+    safe_input = sanitize_input(user_input)
+    
+    # ✅ Use system message for better guidance
+    # ✅ Reasonable token limits
+    response = openai.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant. Answer questions concisely and safely."},
+            {"role": "user", "content": f"Please answer: {safe_input}"}
+        ],
+        max_tokens=1000,  # ✅ Reasonable limit
+        temperature=0.7
+    )
+    
+    # ✅ Validate and strip response
+    result = response.choices[0].message.content.strip()
+    return result if result else "Sorry, I couldn't generate a proper response."
 ```
 
 ---
 
 ## 📊 Project Stats
 
-- **🔧 Languages**: 8+ programming languages supported
+- **🔧 Languages**: 8+ programming languages supported (Primary focus on Python)
 - **🔍 Detection Rules**: 80+ built-in analysis patterns (50+ new in v0.2.0)
 - **⚡ Performance**: Analyzes 1000+ lines of code in <2 seconds (3x faster with precompiled patterns)
-- **🎯 Accuracy**: 95%+ accuracy in security vulnerability detection
 - **🛠️ Tools**: 5 specialized analysis tools (3 new in v0.2.0)
-- **📈 Data Science**: Comprehensive DataFrame and LLM integration analysis
 
 ---
 
@@ -419,13 +554,14 @@ def divide(a, b):
 
 We love contributions! Here's how to get started:
 
-1. **🍴 Fork** the repository  
-2. **🌿 Create** a feature branch: `git checkout -b my-feature`
-3. **✨ Make** your changes and add tests
-4. **✅ Test**: `pytest tests/`
-5. **📝 Commit**: `git commit -am 'Add amazing feature'`
-6. **🚀 Push**: `git push origin my-feature`
-7. **🎯 Create** a Pull Request
+1. **🍴 Fork** the repository to your GitHub account
+2. **📥 Clone** your fork: `git clone https://github.com/YOUR_USERNAME/code-review-mcp.git`
+3. **🌿 Create** a feature branch: `git checkout -b my-feature`
+4. **✨ Make** your changes and add tests
+5. **✅ Test**: `pytest tests/`
+6. **📝 Commit**: `git commit -am 'Add amazing feature'`
+7. **🚀 Push** to your fork: `git push origin my-feature`
+8. **🎯 Create** a Pull Request from your fork to the main repository
 
 **Areas we need help with:**
 - Adding support for more programming languages
