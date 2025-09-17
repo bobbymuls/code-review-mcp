@@ -8,6 +8,8 @@ An intelligent Model Context Protocol (MCP) server that provides real-time code 
 
 ## ⚡ Quick Start (3 Minutes Setup)
 
+> **🔄 Fast-changing project?** This MCP server updates frequently! Consider using [Method 2: Editable Install](#-method-2-editable-install-developers--testers) for instant updates.
+
 ### Step 1: Install Python Package
 ```bash
 pip install git+https://github.com/bobbymuls/code-review-mcp.git
@@ -127,19 +129,51 @@ The server now supports both **absolute** and **relative** file paths:
 
 ## 🛠️ Installation & Configuration Options
 
-### Option 1: System Python (Simplest)
+> **💡 Choose your installation method based on your needs:**
+
+### 📦 **Method 1: Regular Install (Most Users)**
+**Use this if:** You want stable, easy setup and don't plan to modify the code.
+
 ```bash
-# Install globally
+# Install from GitHub
 pip install git+https://github.com/bobbymuls/code-review-mcp.git
 
-# Find Python path
+# Find your Python path
 where python    # Windows
 which python    # macOS/Linux
-
-# Use the full path in Cursor config
 ```
 
-### Option 2: Virtual Environment (Recommended for Development)
+**✅ Pros:** Simple, works everywhere  
+**❌ Cons:** Must reinstall to get updates (`pip uninstall code-review-mcp && pip install git+https://github.com/bobbymuls/code-review-mcp.git`)
+
+---
+
+### 🔧 **Method 2: Editable Install (Developers & Testers)**
+**Use this if:** You want instant updates, plan to test changes, or contribute to development.
+
+```bash
+# Clone and install in development mode
+git clone https://github.com/bobbymuls/code-review-mcp.git
+cd code-review-mcp
+pip install -e .
+```
+
+**✅ Pros:** Changes take effect immediately after Cursor restart  
+**✅ Pros:** Perfect for testing latest features  
+**❌ Cons:** Requires local repository
+
+**🚀 For Rapid Development:**
+- Edit `src/code_review_mcp/server.py` 
+- Restart Cursor
+- Changes are live instantly!
+
+**⚡ Perfect for fast-changing MCP servers:** Since this server updates frequently with new features and bug fixes, editable install lets you pull updates with `git pull` and test them immediately.
+
+---
+
+### 🐍 **Method 3: Virtual Environment (Isolation)**
+**Use this if:** You want to isolate dependencies or use multiple Python projects.
+
 ```bash
 git clone https://github.com/bobbymuls/code-review-mcp.git
 cd code-review-mcp
@@ -149,14 +183,19 @@ python -m venv venv
 venv\Scripts\activate          # Windows
 source venv/bin/activate       # macOS/Linux
 
-pip install -e .
+# Choose regular or editable install
+pip install -e .               # For development (recommended)
+# OR
+pip install git+https://github.com/bobbymuls/code-review-mcp.git  # For stable use
 ```
 
 **For virtual environment, use the venv Python path in Cursor**:
 - **Windows**: `"C:\\path\\to\\project\\venv\\Scripts\\python.exe"`
 - **macOS/Linux**: `"/path/to/project/venv/bin/python"`
 
-### Option 3: Conda Environment
+---
+
+### 🔄 **Method 4: Conda Environment**
 ```bash
 conda create -n code-review python=3.11
 conda activate code-review
@@ -165,6 +204,17 @@ pip install git+https://github.com/bobbymuls/code-review-mcp.git
 # Find conda Python path
 conda info --envs
 ```
+
+---
+
+## 🚀 **Quick Setup Comparison**
+
+| Installation Method | Commands | Update Process | Best For |
+|-------------------|----------|----------------|----------|
+| **Regular Install** | `pip install git+...` | Reinstall command | Regular users |
+| **Editable Install** | `git clone` + `pip install -e .` | `git pull` + restart Cursor | Developers & testers |
+| **Virtual Environment** | `python -m venv` + install | Depends on install method | Project isolation |
+| **Conda** | `conda create` + install | Reinstall in conda env | Conda users |
 
 ---
 
