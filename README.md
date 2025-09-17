@@ -17,7 +17,7 @@ pip install git+https://github.com/bobbymuls/code-review-mcp.git
 
 1. **Open Cursor Settings** (Ctrl+, or Cmd+,)
 2. **Navigate to**: `MCP & Integrations` → `New MCP Server`
-3. **Find your Python path**:
+3. **Find your Python path in cmd**:
    ```bash
    # Find where Python is installed
    which python   # macOS/Linux
