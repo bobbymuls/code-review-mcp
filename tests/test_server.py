@@ -10,7 +10,8 @@ from code_review_mcp.server import (
     calculate_metrics,
     get_code_info,
     analyze_llm_invoke,
-    analyze_api_handling
+    analyze_api_handling,
+    analyze_data_processing
 )
 
 
@@ -240,3 +241,40 @@ for i in range(10):
         # Should find iterrows issue specifically
         iterrows_issues = [issue for issue in issues if "iterrows" in issue.message.lower()]
         assert len(iterrows_issues) > 0
+
+    @pytest.mark.asyncio
+    async def test_analyze_data_processing_patterns(self):
+        """Test data processing analysis."""
+        code = """import pandas as pd
+import json
+
+# Multiple DataFrame copies
+item_data_str = item_data.copy()
+item_data_str['item_id'] = item_data_str['item_id'].astype(str)
+
+# Inefficient type conversion chains  
+item_data['item_id'] = pd.to_numeric(item_data['item_id'], errors='coerce')
+item_data = item_data.dropna(subset=['item_id'])
+item_data['item_id'] = item_data['item_id'].astype('int64').astype('string')
+
+# Expensive operations after merge
+merged = recs_df.merge(df_work.drop(columns=["item_id"]), on="item_id_str", how="left")
+merged = merged.drop(columns=["item_id_str", "__order", "shop_name"])
+
+# JSON operations
+result_json = json.dumps(merged.to_dict(orient="records"), ensure_ascii=False)
+result_json = json.loads(result_json)
+
+# Direct dictionary access without validation
+def main(input_data: dict) -> list:
+    item_id = input_data['item_id']
+    shop_id = input_data['shop_id']
+"""
+        result = await analyze_data_processing({"code_content": code, "language": "python"})
+        
+        # Should return formatted text content
+        assert len(result) == 1
+        assert "Data Processing Pipeline Analysis Results" in result[0].text
+        assert ("Memory & Resource Management" in result[0].text or 
+                "Data Processing Performance" in result[0].text or
+                "Data Validation & Reliability" in result[0].text)

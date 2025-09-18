@@ -128,7 +128,9 @@ def get_compiled_patterns() -> Dict[str, List[Tuple[Pattern, str, str]]]:
                 "Internal service URL exposure",
             ),
             (
-                re.compile(r'def\s+\w+\([^)]*\):[^{]*\w+\s*=\s*\w+\[["\'][^"\']+["\']\](?!\s*if|\s*try)', re.IGNORECASE),
+                re.compile(
+                    r'def\s+\w+\([^)]*\):[^{]*\w+\s*=\s*\w+\[["\'][^"\']+["\']\](?!\s*if|\s*try)', re.IGNORECASE
+                ),
                 "medium",
                 "Missing input validation - direct dictionary access without checks",
             ),
