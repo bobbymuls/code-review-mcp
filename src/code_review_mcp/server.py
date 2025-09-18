@@ -15,7 +15,7 @@ The server integrates seamlessly with Cursor IDE through the MCP protocol,
 providing real-time code analysis without leaving your development environment.
 
 Author: Bobby Muljono
-Version: 0.2.0
+Version: 0.2.1
 License: Apache 2.0
 """
 
@@ -111,6 +111,27 @@ def get_compiled_patterns() -> Dict[str, List[Tuple[Pattern, str, str]]]:
                 "high",
                 "Hardcoded API key detected",
             ),
+            # Enhanced configuration-based credential patterns
+            (
+                re.compile(r'["\'][a-zA-Z0-9]{32,}["\']', re.IGNORECASE),
+                "critical",
+                "Potential hardcoded secret or token (32+ chars)",
+            ),
+            (
+                re.compile(r'["\']apiKey["\']?\s*:\s*["\'][a-zA-Z0-9]{32,}["\']', re.IGNORECASE),
+                "critical",
+                "Hardcoded API key detected in configuration object",
+            ),
+            (
+                re.compile(r'baseURL["\']?\s*:\s*["\']https?://[^"\']*internal[^"\']*["\']', re.IGNORECASE),
+                "medium",
+                "Internal service URL exposure",
+            ),
+            (
+                re.compile(r'def\s+\w+\([^)]*\):[^{]*\w+\s*=\s*\w+\[["\'][^"\']+["\']\](?!\s*if|\s*try)', re.IGNORECASE),
+                "medium",
+                "Missing input validation - direct dictionary access without checks",
+            ),
             # API calls assessment patterns
             (
                 re.compile(r"requests\.get\([^)]*\)(?!\s*\.raise_for_status)", re.IGNORECASE),
@@ -152,6 +173,37 @@ def get_compiled_patterns() -> Dict[str, List[Tuple[Pattern, str, str]]]:
                 re.compile(r"while.*requests\.(get|post)", re.IGNORECASE),
                 "medium",
                 "Potential infinite retry loop without proper backoff",
+            ),
+            # Enhanced API and service integration patterns
+            (
+                re.compile(r"max_calls\s*=\s*\d+", re.IGNORECASE),
+                "low",
+                "Hardcoded API call limits - consider making configurable",
+            ),
+            (
+                re.compile(r"page_size\s*=\s*\d+", re.IGNORECASE),
+                "low",
+                "Hardcoded page size - consider making configurable",
+            ),
+            (
+                re.compile(r"for.*range\(max_calls\).*client\.", re.IGNORECASE),
+                "medium",
+                "API pagination without proper error handling or circuit breaker",
+            ),
+            (
+                re.compile(r"for.*range\(\d+\).*\.(get|post|call)", re.IGNORECASE),
+                "medium",
+                "Loop with API calls - ensure proper rate limiting and error handling",
+            ),
+            (
+                re.compile(r"client\.\w+\([^)]*\)(?!.*except|.*try)", re.IGNORECASE),
+                "medium",
+                "API client call without exception handling",
+            ),
+            (
+                re.compile(r"\.refresh\(\)(?!.*except|.*try)", re.IGNORECASE),
+                "low",
+                "Token refresh without error handling",
             ),
             # LLM integration assessment patterns
             (
@@ -230,6 +282,52 @@ def get_compiled_patterns() -> Dict[str, List[Tuple[Pattern, str, str]]]:
                 re.compile(r"\.groupby\([^)]*\)\.apply\(", re.IGNORECASE),
                 "low",
                 "Consider .agg() or .transform() instead of .apply() for better performance",
+            ),
+            # Enhanced pandas and data processing performance patterns
+            (
+                re.compile(r"\.copy\(\).*\.copy\(\)", re.IGNORECASE),
+                "high",
+                "Multiple DataFrame copies - consolidate operations to reduce memory usage",
+            ),
+            (
+                re.compile(r"\.astype\([^)]+\)\.astype\([^)]+\)", re.IGNORECASE),
+                "medium",
+                "Chained type conversions - optimize data types upfront",
+            ),
+            (
+                re.compile(r"pd\.to_numeric.*\.astype.*\.astype", re.IGNORECASE),
+                "high",
+                "Inefficient type conversion chain - consolidate type operations",
+            ),
+            (
+                re.compile(r"\.merge\([^)]*\).*\.drop\(columns=", re.IGNORECASE),
+                "medium",
+                "Merge followed by column drop - optimize join to exclude unwanted columns",
+            ),
+            (
+                re.compile(r"\.fillna\([^)]*\)\.fillna\([^)]*\)", re.IGNORECASE),
+                "low",
+                "Multiple fillna operations - consider single operation with dict",
+            ),
+            (
+                re.compile(r"\.reset_index\([^)]*\)\.reset_index\([^)]*\)", re.IGNORECASE),
+                "low",
+                "Multiple reset_index operations - consolidate into single call",
+            ),
+            (
+                re.compile(r"\.astype\(['\"]string['\"]\)", re.IGNORECASE),
+                "low",
+                "Consider using 'str' instead of 'string' dtype for better performance",
+            ),
+            (
+                re.compile(r"\.to_dict\(orient=['\"]records['\"]\)", re.IGNORECASE),
+                "medium",
+                "to_dict with records orientation can be memory intensive for large DataFrames",
+            ),
+            (
+                re.compile(r"json\.loads\(.*\.to_dict\(", re.IGNORECASE),
+                "medium",
+                "Unnecessary JSON serialization/deserialization - work with dict directly",
             ),
             # Google Sheets integration patterns
             (
@@ -589,6 +687,29 @@ async def handle_list_tools() -> List[types.Tool]:
                 "additionalProperties": False,
             },
         ),
+        types.Tool(
+            name="analyze_data_processing",
+            description="Specialized analysis for data processing pipelines, pandas operations, and memory optimization",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to the code file to analyze",
+                    },
+                    "code_content": {
+                        "type": "string",
+                        "description": "Code content to analyze (alternative to file_path)",
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "Programming language",
+                    },
+                },
+                "required": [],
+                "additionalProperties": False,
+            },
+        ),
     ]
 
 
@@ -629,6 +750,8 @@ async def handle_call_tool(
         return await analyze_api_handling(arguments)
     elif name == "check_performance":
         return await check_performance(arguments)
+    elif name == "analyze_data_processing":
+        return await analyze_data_processing(arguments)
     else:
         raise ValueError(f"Unknown tool: {name}")
 
@@ -1762,6 +1885,198 @@ async def check_performance(arguments: Dict[str, Any]) -> List[types.TextContent
         ]
 
 
+async def analyze_data_processing(arguments: Dict[str, Any]) -> List[types.TextContent]:
+    """Specialized analysis for data processing pipelines, pandas operations, and memory optimization.
+
+    Focuses specifically on data processing workflows including:
+    - DataFrame operation efficiency and memory usage
+    - Data type optimization and conversion chains
+    - Pipeline structure and data flow optimization
+    - Memory leaks and resource management
+    - Data validation and error handling in pipelines
+
+    Args:
+        arguments (Dict[str, Any]): Analysis parameters including:
+            - file_path or code_content: Code to analyze
+            - language: Programming language (optional, auto-detected)
+
+    Returns:
+        List[types.TextContent]: Data processing analysis results
+
+    Raises:
+        Exception: If analysis fails
+
+    Note:
+        Specialized for data engineers and data scientists working with large datasets
+    """
+    logger.info("Starting data processing pipeline analysis")
+    try:
+        try:
+            code_content, file_path, language = await get_code_info(arguments)
+        except FileReadError as e:
+            logger.error(f"File read error during data processing analysis: {e}")
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"📊 **Data Processing Analysis Failed**\n\nFile read error: {str(e)}",
+                )
+            ]
+
+        if not code_content:
+            logger.warning("No code content provided for data processing analysis")
+            return [
+                types.TextContent(
+                    type="text",
+                    text="📊 **Data Processing Analysis**\n\nError: No code content provided or file not found.",
+                )
+            ]
+
+        if not language:
+            language = detect_language(file_path, code_content)
+
+        # Get patterns related to data processing
+        all_patterns = get_compiled_patterns()
+        patterns = all_patterns.get(language, [])
+
+        # Filter for data processing specific patterns
+        data_patterns = [
+            (pattern, severity, message)
+            for pattern, severity, message in patterns
+            if any(
+                keyword in message.lower()
+                for keyword in [
+                    "dataframe",
+                    "pandas",
+                    "copy",
+                    "astype",
+                    "merge",
+                    "memory",
+                    "json",
+                    "to_dict",
+                    "fillna",
+                    "reset_index",
+                    "iterrows",
+                    "concat",
+                    "append",
+                    "vectorized",
+                    "chunking",
+                ]
+            )
+        ]
+
+        # Analyze code
+        issues = []
+        lines = code_content.split("\n")
+
+        for i, line in enumerate(lines, 1):
+            for pattern, severity, message in data_patterns:
+                if pattern.search(line):
+                    # Categorize issues specifically for data processing context
+                    if "memory" in message.lower() or "copy" in message.lower():
+                        category = "performance"
+                        suggestion = "Optimize memory usage by reducing DataFrame copies and consolidating operations"
+                    elif "type" in message.lower() or "astype" in message.lower():
+                        category = "performance"
+                        suggestion = "Optimize data type conversions to reduce processing overhead"
+                    elif "merge" in message.lower() or "join" in message.lower():
+                        category = "performance"
+                        suggestion = "Optimize DataFrame joins and merges for better performance"
+                    elif "iterrows" in message.lower() or "vectorized" in message.lower():
+                        category = "performance"
+                        suggestion = "Use vectorized operations instead of row-by-row processing"
+                    else:
+                        category = "performance"
+                        suggestion = "Review data processing pipeline for optimization opportunities"
+
+                    issues.append(
+                        CodeIssue(
+                            severity=severity,
+                            category=category,
+                            message=message,
+                            line=i,
+                            suggestion=suggestion,
+                        )
+                    )
+
+        # Additional data processing specific checks
+        # Check for potential memory issues
+        if "pd.read_csv" in code_content and "chunksize" not in code_content:
+            issues.append(
+                CodeIssue(
+                    severity="medium",
+                    category="performance",
+                    message="Large file reading without chunking - potential memory issues",
+                    suggestion="Consider using chunksize parameter for large CSV files",
+                )
+            )
+
+        # Check for data validation
+        if "input_data[" in code_content and "get(" not in code_content:
+            issues.append(
+                CodeIssue(
+                    severity="medium",
+                    category="bug",
+                    message="Direct dictionary access without validation",
+                    suggestion="Use .get() method or add validation checks for input data",
+                )
+            )
+
+        if not issues:
+            return [
+                types.TextContent(
+                    type="text",
+                    text="✅ No data processing issues detected! Your data pipeline looks optimized.",
+                )
+            ]
+
+        # Format results specifically for data processing analysis
+        result_text = "📊 **Data Processing Pipeline Analysis Results:**\n\n"
+
+        # Group by issue type
+        memory_issues = [i for i in issues if "memory" in i.message.lower() or "copy" in i.message.lower()]
+        performance_issues = [i for i in issues if i.category == "performance" and i not in memory_issues]
+        data_issues = [i for i in issues if i.category == "bug"]
+
+        if memory_issues:
+            result_text += "🧠 **Memory & Resource Management:**\n"
+            for issue in memory_issues:
+                result_text += f"- **{issue.severity.upper()}** (Line {issue.line}): {issue.message}\n"
+                result_text += f"  💡 {issue.suggestion}\n\n"
+
+        if performance_issues:
+            result_text += "⚡ **Data Processing Performance:**\n"
+            for issue in performance_issues:
+                result_text += f"- **{issue.severity.upper()}** (Line {issue.line}): {issue.message}\n"
+                result_text += f"  💡 {issue.suggestion}\n\n"
+
+        if data_issues:
+            result_text += "🔍 **Data Validation & Reliability:**\n"
+            for issue in data_issues:
+                result_text += f"- **{issue.severity.upper()}** (Line {issue.line}): {issue.message}\n"
+                result_text += f"  💡 {issue.suggestion}\n\n"
+
+        # Add data processing specific recommendations
+        result_text += "💡 **Data Processing Best Practices Checklist:**\n"
+        result_text += "- ✅ Use vectorized operations instead of loops\n"
+        result_text += "- ✅ Minimize DataFrame copies and consolidate operations\n"
+        result_text += "- ✅ Optimize data types early in the pipeline\n"
+        result_text += "- ✅ Use chunking for large datasets\n"
+        result_text += "- ✅ Validate input data before processing\n"
+        result_text += "- ✅ Monitor memory usage in data pipelines\n"
+        result_text += "- ✅ Use efficient join strategies for merges\n"
+
+        return [types.TextContent(type="text", text=result_text)]
+
+    except Exception as e:
+        logger.error(f"Unexpected error during data processing analysis: {e}", exc_info=True)
+        return [
+            types.TextContent(
+                type="text",
+                text=f"📊 **Data Processing Analysis Error**\n\nAn unexpected error occurred: {str(e)}\n\nPlease try again or contact support.",
+            )
+        ]
+
+
 async def main() -> None:
     """Initialize and run the Code Review MCP server.
 
@@ -1775,14 +2090,14 @@ async def main() -> None:
     Note:
         This function runs indefinitely until the MCP client disconnects
     """
-    logger.info("Starting Code Review MCP Server v0.2.0")
+    logger.info("Starting Code Review MCP Server v0.2.1")
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
             write_stream,
             InitializationOptions(
                 server_name="code-review-mcp",
-                server_version="0.2.0",
+                server_version="0.2.1",
                 capabilities=server.get_capabilities(
                     notification_options=NotificationOptions(),
                     experimental_capabilities={},

@@ -1,22 +1,26 @@
-# 🔍 Code Review MCP Server v0.2.0
+# 🔍 Code Review MCP Server v0.2.1
 
 **Automatically catch bugs, security issues, and performance problems while you code!**
 
 An intelligent Model Context Protocol (MCP) server that provides real-time code analysis directly in Cursor IDE. Now with **specialized analysis tools** for data science, AI development, and API integration. Get instant feedback on code quality without leaving your editor.
 
-## 🆕 **What's New in v0.2.0**
+## 🆕 **What's New in v0.2.1**
 
-### 🎯 **Modular Analysis Tools**
+### 🎯 **New Specialized Analysis Tool**
+- **📊 `analyze_data_processing`** - Specialized analysis for data processing pipelines, pandas operations, and memory optimization
+
+### 🔧 **Enhanced Detection Patterns**
+- **Enhanced Security Patterns** - Better detection of configuration-based secrets and credentials
+- **Enhanced Performance Patterns** - Advanced pandas-specific optimizations and data processing improvements
+- **Enhanced API Patterns** - Improved pagination, rate limiting, and service-specific API analysis
+- **30+ new analysis patterns** specifically for data engineering and processing workflows
+
+### 🏗️ **Previous Features (v0.2.0)**
 - **🤖 `analyze_llm_invoke`** - Critique LLM integration, prompt engineering, and model parameters
 - **🌐 `analyze_api_handling`** - Analyze API calls, error handling, timeouts, and retry strategies  
-- **📈 Enhanced `check_performance`** - Now includes DataFrame operations and data science optimizations
-
-### 🔧 **Enhanced Features**
-- **50+ new analysis patterns** for data science and AI workflows
+- **📈 Enhanced `check_performance`** - DataFrame operations and data science optimizations
+- **50+ analysis patterns** for data science and AI workflows
 - **Precompiled regex patterns** for 3x faster analysis
-- **Pydantic v2 compatibility** with modern validation
-- **Comprehensive error handling** with detailed logging
-- **Type-safe codebase** with full type annotations
 
 ---
 
@@ -59,7 +63,7 @@ pip install git+https://github.com/bobbymuls/code-review-mcp.git
 
 ### Step 3: Restart Cursor & Start Coding!
 
-✅ You should see **5 tools enabled** under `code-review-mcp` in MCP settings  
+✅ You should see **6 tools enabled** under `code-review-mcp` in MCP settings  
 ✅ Now you can ask: *"Review this code for security issues"* and get instant analysis!
 
 ---
@@ -85,10 +89,12 @@ pip install git+https://github.com/bobbymuls/code-review-mcp.git
 - **NEW**: Retry strategy optimization
 - **NEW**: JSON parsing safety
 
-### 📈 **DataFrame & Performance Optimization**
+### 📊 **Data Processing & Performance Optimization**
+- **NEW**: Specialized data processing pipeline analysis
 - **NEW**: DataFrame operation optimization (pandas)
-- **NEW**: Vectorization recommendations
-- **NEW**: Memory usage improvements
+- **NEW**: Memory usage and efficiency improvements
+- **NEW**: Data type optimization recommendations
+- **NEW**: Vectorization and performance suggestions
 - Suggests more efficient algorithms
 - Identifies slow list operations
 - Recommends better data structures
@@ -142,6 +148,13 @@ Once installed, simply chat with Cursor using these prompts:
 "Use check_performance to analyze my pandas DataFrame code"
 "Check this data processing code for optimization"
 "Analyze performance of utils/data-processing.js"
+```
+
+### 📊 **NEW: Data Processing Analysis**
+```
+"Use analyze_data_processing to review my data pipeline"
+"Check my pandas operations for memory efficiency"
+"Analyze this ETL code for optimization opportunities"
 ```
 
 ---
@@ -314,9 +327,10 @@ Test relative path support:
 Check Cursor's MCP settings - you should see:
 - ✅ `review_code` - Complete code analysis
 - ✅ `analyze_security` - Security-focused scanning
-- ✅ `analyze_llm_invoke` - **NEW**: LLM integration critique
-- ✅ `analyze_api_handling` - **NEW**: API calls and error handling  
+- ✅ `analyze_llm_invoke` - LLM integration critique
+- ✅ `analyze_api_handling` - API calls and error handling  
 - ✅ `check_performance` - Enhanced performance optimization with DataFrame analysis
+- ✅ `analyze_data_processing` - **NEW**: Specialized data processing pipeline analysis
 
 ---
 
@@ -354,13 +368,14 @@ Check Cursor's MCP settings - you should see:
 
 ## 🎯 Example Use Cases
 
-The Code Review MCP Server provides **5 specialized analysis tools**, each designed for specific code review needs:
+The Code Review MCP Server provides **6 specialized analysis tools**, each designed for specific code review needs:
 
 - **`review_code`** - Comprehensive analysis combining all checks
 - **`analyze_security`** - Focused security vulnerability assessment  
 - **`analyze_llm_invoke`** - LLM integration and prompt engineering critique
 - **`analyze_api_handling`** - API calls, timeouts, and retry strategy analysis
 - **`check_performance`** - Performance bottlenecks and DataFrame optimization
+- **`analyze_data_processing`** - **NEW**: Specialized data processing pipeline analysis
 
 > 💡 **Pro Tip**: Use the specialized tools when you want focused analysis, or `review_code` for comprehensive assessment!
 
@@ -544,9 +559,9 @@ def chat_with_ai(user_input):
 ## 📊 Project Stats
 
 - **🔧 Languages**: 8+ programming languages supported (Primary focus on Python)
-- **🔍 Detection Rules**: 80+ built-in analysis patterns (50+ new in v0.2.0)
+- **🔍 Detection Rules**: 110+ built-in analysis patterns (30+ new in v0.2.1, 50+ new in v0.2.0)
 - **⚡ Performance**: Analyzes 1000+ lines of code in <2 seconds (3x faster with precompiled patterns)
-- **🛠️ Tools**: 5 specialized analysis tools (3 new in v0.2.0)
+- **🛠️ Tools**: 6 specialized analysis tools (1 new in v0.2.1, 3 new in v0.2.0)
 
 ---
 
@@ -573,6 +588,22 @@ We love contributions! Here's how to get started:
 ---
 
 ## 📝 Changelog
+
+### v0.2.1 (2025-09-18) - Enhanced Analysis Patterns
+#### 🎯 **New Analysis Tool**
+- **📊 `analyze_data_processing`** - Specialized analysis for data processing pipelines, pandas operations, and memory optimization
+
+#### 🔧 **Enhanced Detection Patterns**
+- **Enhanced Security Patterns** - Better detection of configuration-based secrets, hardcoded credentials, and internal service URLs
+- **Enhanced Performance Patterns** - Advanced pandas-specific optimizations including chained operations, DataFrame copies, and memory usage
+- **Enhanced API Patterns** - Improved detection of pagination issues, rate limiting problems, and service-specific API calls
+- **30+ new analysis patterns** specifically targeting data engineering and processing workflows
+
+#### 🐛 **Bug Fixes & Improvements**
+- Fixed security pattern matching for configuration objects and API keys
+- Improved DataFrame operation detection for complex data processing pipelines
+- Enhanced error handling for API client operations
+- Better detection of input validation issues
 
 ### v0.2.0 (2025-09-17) - Major Feature Release
 #### 🎯 **New Specialized Analysis Tools**
