@@ -35,8 +35,8 @@ from mcp.server import NotificationOptions, Server
 from mcp.server.models import InitializationOptions
 from pydantic import BaseModel, Field, field_validator
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+# Configure logging - using DEBUG level for detailed path debugging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -775,12 +775,19 @@ def find_workspace_root(start_path: Optional[str] = None) -> str:
     Note:
         Falls back to current working directory if no project markers found
     """
-    logger.debug(f"Finding workspace root from: {start_path or 'script directory'}")
+    logger.debug(f"=== FIND_WORKSPACE_ROOT DEBUG ===")
+    logger.debug(f"Input start_path: {start_path}")
+    logger.debug(f"Current working directory: {os.getcwd()}")
+    logger.debug(f"__file__ location: {__file__}")
+    logger.debug(f"Absolute __file__: {os.path.abspath(__file__)}")
+    
     if start_path is None:
         # Start from the directory containing this server.py file
         start_path = os.path.dirname(os.path.abspath(__file__))
+        logger.debug(f"Using script directory as start_path: {start_path}")
 
     current_path = os.path.abspath(start_path)
+    logger.debug(f"Starting search from absolute path: {current_path}")
 
     # Common project markers to look for
     markers = [
@@ -791,10 +798,27 @@ def find_workspace_root(start_path: Optional[str] = None) -> str:
         "mcp.json",
         ".gitignore",
     ]
+    logger.debug(f"Looking for markers: {markers}")
 
+    search_count = 0
     while current_path != os.path.dirname(current_path):  # Not at root
+        search_count += 1
+        logger.debug(f"Search iteration {search_count}: checking {current_path}")
+        logger.debug(f"Directory exists: {os.path.exists(current_path)}")
+        
+        if os.path.exists(current_path):
+            try:
+                dir_contents = os.listdir(current_path)
+                logger.debug(f"Directory contents: {dir_contents}")
+            except PermissionError:
+                logger.debug(f"Permission denied listing directory: {current_path}")
+        
         for marker in markers:
-            if os.path.exists(os.path.join(current_path, marker)):
+            marker_path = os.path.join(current_path, marker)
+            marker_exists = os.path.exists(marker_path)
+            logger.debug(f"  Checking marker {marker} at {marker_path}: {marker_exists}")
+            if marker_exists:
+                logger.debug(f"Found workspace root at: {current_path}")
                 return current_path
         current_path = os.path.dirname(current_path)
 
@@ -802,11 +826,20 @@ def find_workspace_root(start_path: Optional[str] = None) -> str:
     # server.py is in src/code_review_mcp/, so project root is 2 levels up
     server_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(server_dir))
-    if os.path.exists(os.path.join(project_root, "pyproject.toml")):
+    pyproject_path = os.path.join(project_root, "pyproject.toml")
+    logger.debug(f"Fallback check - server_dir: {server_dir}")
+    logger.debug(f"Fallback check - project_root: {project_root}")
+    logger.debug(f"Fallback check - pyproject.toml at: {pyproject_path}")
+    logger.debug(f"Fallback check - pyproject.toml exists: {os.path.exists(pyproject_path)}")
+    
+    if os.path.exists(pyproject_path):
+        logger.debug(f"Using fallback project root: {project_root}")
         return project_root
 
     # Final fallback to current working directory
-    return os.getcwd()
+    final_fallback = os.getcwd()
+    logger.debug(f"Using final fallback (cwd): {final_fallback}")
+    return final_fallback
 
 
 async def get_code_info(
@@ -833,41 +866,102 @@ async def get_code_info(
     Note:
         Gracefully handles file reading errors by returning empty content
     """
-    logger.debug("Extracting code information from arguments")
+    logger.debug("=== GET_CODE_INFO DEBUG ===")
+    logger.debug(f"Input arguments: {arguments}")
+    
     code_content = arguments.get("code_content", "")
     file_path = arguments.get("file_path")
     language = arguments.get("language")
+    
+    logger.debug(f"Extracted code_content length: {len(code_content) if code_content else 0}")
+    logger.debug(f"Extracted file_path: {file_path}")
+    logger.debug(f"Extracted language: {language}")
 
     # If file_path is provided but no code_content, try to read the file
     if file_path and not code_content:
+        logger.debug(f"Attempting to read file: {file_path}")
+        logger.debug(f"File path is absolute: {os.path.isabs(file_path)}")
+        
         try:
             # Handle both absolute and relative paths
             if os.path.isabs(file_path):
                 abs_file_path = file_path
+                logger.debug(f"Using absolute path as-is: {abs_file_path}")
             else:
                 # For relative paths, resolve from workspace root
                 workspace_root = find_workspace_root()
                 abs_file_path = os.path.join(workspace_root, file_path)
+                logger.debug(f"Resolved relative path - workspace_root: {workspace_root}")
+                logger.debug(f"Resolved relative path - joined: {abs_file_path}")
 
             # Normalize the path for the current OS
             abs_file_path = os.path.normpath(abs_file_path)
+            logger.debug(f"Normalized path: {abs_file_path}")
+            
+            # Check path components
+            logger.debug(f"Path exists: {os.path.exists(abs_file_path)}")
+            logger.debug(f"Path is file: {os.path.isfile(abs_file_path)}")
+            logger.debug(f"Path is dir: {os.path.isdir(abs_file_path)}")
+            
+            # Check parent directory
+            parent_dir = os.path.dirname(abs_file_path)
+            logger.debug(f"Parent directory: {parent_dir}")
+            logger.debug(f"Parent directory exists: {os.path.exists(parent_dir)}")
+            
+            if os.path.exists(parent_dir):
+                try:
+                    parent_contents = os.listdir(parent_dir)
+                    logger.debug(f"Parent directory contents: {parent_contents}")
+                    
+                    # Check if our target file is in the directory listing
+                    target_filename = os.path.basename(abs_file_path)
+                    logger.debug(f"Target filename: {target_filename}")
+                    logger.debug(f"Target file in parent directory: {target_filename in parent_contents}")
+                    
+                except PermissionError:
+                    logger.debug(f"Permission denied listing parent directory: {parent_dir}")
+            
+            # Try to get file stats
+            try:
+                file_stat = os.stat(abs_file_path)
+                logger.debug(f"File stat - size: {file_stat.st_size} bytes")
+                logger.debug(f"File stat - mode: {oct(file_stat.st_mode)}")
+            except (FileNotFoundError, PermissionError) as stat_e:
+                logger.debug(f"Could not get file stats: {stat_e}")
 
+            logger.debug(f"Attempting to open file: {abs_file_path}")
             with open(abs_file_path, "r", encoding="utf-8") as f:
                 code_content = f.read()
+                logger.debug(f"Successfully read {len(code_content)} characters from file")
+                
         except FileNotFoundError as e:
-            logger.warning(f"File not found: {abs_file_path}")
+            logger.error(f"=== FILE NOT FOUND ERROR ===")
+            logger.error(f"Original file_path: {file_path}")
+            logger.error(f"Resolved abs_file_path: {abs_file_path}")
+            logger.error(f"Error details: {e}")
             raise FileReadError(f"File not found: {file_path}") from e
         except PermissionError as e:
-            logger.error(f"Permission denied reading file: {abs_file_path}")
+            logger.error(f"=== PERMISSION ERROR ===")
+            logger.error(f"Original file_path: {file_path}")
+            logger.error(f"Resolved abs_file_path: {abs_file_path}")
+            logger.error(f"Error details: {e}")
             raise FileReadError(f"Permission denied: {file_path}") from e
         except UnicodeDecodeError as e:
-            logger.error(f"Unable to decode file as UTF-8: {abs_file_path}")
+            logger.error(f"=== ENCODING ERROR ===")
+            logger.error(f"Original file_path: {file_path}")
+            logger.error(f"Resolved abs_file_path: {abs_file_path}")
+            logger.error(f"Error details: {e}")
             raise FileReadError(f"File encoding error: {file_path}") from e
         except Exception as e:
-            logger.error(f"Unexpected error reading file {abs_file_path}: {e}")
+            logger.error(f"=== UNEXPECTED ERROR ===")
+            logger.error(f"Original file_path: {file_path}")
+            logger.error(f"Resolved abs_file_path: {abs_file_path}")
+            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Error details: {e}")
             # For backwards compatibility, continue with empty content
             pass
 
+    logger.debug(f"Final code_content length: {len(code_content) if code_content else 0}")
     return code_content, file_path, language
 
 
