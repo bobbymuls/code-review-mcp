@@ -334,38 +334,6 @@ Check Cursor's MCP settings - you should see:
 
 ---
 
-## 🚨 Troubleshooting
-
-### ❌ "No tools or prompts" in Cursor
-**Solutions:**
-1. **Use full Python path**: Most common issue! Replace `"python"` with full path like `"C:\\Python311\\python.exe"`
-2. **Check Python path**: Run `which python` (macOS/Linux) or `where python` (Windows)
-3. **Restart Cursor completely** (close all windows) after config changes
-4. **Verify installation**: Run `python -c "import code_review_mcp.server; print('✅ Working')"`
-
-### ❌ "Module not found" error
-**Solutions:**
-1. **Reinstall**: `pip uninstall code-review-mcp && pip install git+https://github.com/bobbymuls/code-review-mcp.git`
-2. **Check virtual environment**: Make sure you're using the right Python environment
-3. **Use absolute path**: Replace `python` with full path to your Python executable
-
-### ❌ Tools not working in chat
-**Solutions:**
-1. **Check configuration**: Ensure JSON syntax is correct (no trailing commas)
-2. **Restart Cursor**: Full restart after config changes
-3. **Check logs**: Look for error messages in Cursor's developer console
-
-### ❌ "File not found" with relative paths
-**Solutions:**
-1. **Use workspace-relative paths**: Ensure paths are relative to your project root (where `.git`, `pyproject.toml`, etc. are located)
-2. **Check workspace detection**: The server automatically detects your workspace root using common project markers
-3. **Try absolute paths**: If relative paths fail, use full absolute paths as a fallback
-
-### 🔍 Get Help
-- **GitHub Issues**: [Report bugs/suggestions here](https://github.com/bobbymuls/code-review-mcp/issues)
-
----
-
 ## 🎯 Example Use Cases
 
 The Code Review MCP Server provides **6 specialized analysis tools**, each designed for specific code review needs:
