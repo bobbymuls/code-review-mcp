@@ -780,7 +780,7 @@ def find_workspace_root(start_path: Optional[str] = None) -> str:
     logger.debug(f"Current working directory: {os.getcwd()}")
     logger.debug(f"__file__ location: {__file__}")
     logger.debug(f"Absolute __file__: {os.path.abspath(__file__)}")
-    
+
     if start_path is None:
         # Start from the directory containing this server.py file
         start_path = os.path.dirname(os.path.abspath(__file__))
@@ -805,14 +805,14 @@ def find_workspace_root(start_path: Optional[str] = None) -> str:
         search_count += 1
         logger.debug(f"Search iteration {search_count}: checking {current_path}")
         logger.debug(f"Directory exists: {os.path.exists(current_path)}")
-        
+
         if os.path.exists(current_path):
             try:
                 dir_contents = os.listdir(current_path)
                 logger.debug(f"Directory contents: {dir_contents}")
             except PermissionError:
                 logger.debug(f"Permission denied listing directory: {current_path}")
-        
+
         for marker in markers:
             marker_path = os.path.join(current_path, marker)
             marker_exists = os.path.exists(marker_path)
@@ -831,7 +831,7 @@ def find_workspace_root(start_path: Optional[str] = None) -> str:
     logger.debug(f"Fallback check - project_root: {project_root}")
     logger.debug(f"Fallback check - pyproject.toml at: {pyproject_path}")
     logger.debug(f"Fallback check - pyproject.toml exists: {os.path.exists(pyproject_path)}")
-    
+
     if os.path.exists(pyproject_path):
         logger.debug(f"Using fallback project root: {project_root}")
         return project_root
@@ -868,11 +868,11 @@ async def get_code_info(
     """
     logger.debug("=== GET_CODE_INFO DEBUG ===")
     logger.debug(f"Input arguments: {arguments}")
-    
+
     code_content = arguments.get("code_content", "")
     file_path = arguments.get("file_path")
     language = arguments.get("language")
-    
+
     logger.debug(f"Extracted code_content length: {len(code_content) if code_content else 0}")
     logger.debug(f"Extracted file_path: {file_path}")
     logger.debug(f"Extracted language: {language}")
@@ -881,7 +881,7 @@ async def get_code_info(
     if file_path and not code_content:
         logger.debug(f"Attempting to read file: {file_path}")
         logger.debug(f"File path is absolute: {os.path.isabs(file_path)}")
-        
+
         try:
             # Handle both absolute and relative paths
             if os.path.isabs(file_path):
@@ -897,30 +897,30 @@ async def get_code_info(
             # Normalize the path for the current OS
             abs_file_path = os.path.normpath(abs_file_path)
             logger.debug(f"Normalized path: {abs_file_path}")
-            
+
             # Check path components
             logger.debug(f"Path exists: {os.path.exists(abs_file_path)}")
             logger.debug(f"Path is file: {os.path.isfile(abs_file_path)}")
             logger.debug(f"Path is dir: {os.path.isdir(abs_file_path)}")
-            
+
             # Check parent directory
             parent_dir = os.path.dirname(abs_file_path)
             logger.debug(f"Parent directory: {parent_dir}")
             logger.debug(f"Parent directory exists: {os.path.exists(parent_dir)}")
-            
+
             if os.path.exists(parent_dir):
                 try:
                     parent_contents = os.listdir(parent_dir)
                     logger.debug(f"Parent directory contents: {parent_contents}")
-                    
+
                     # Check if our target file is in the directory listing
                     target_filename = os.path.basename(abs_file_path)
                     logger.debug(f"Target filename: {target_filename}")
                     logger.debug(f"Target file in parent directory: {target_filename in parent_contents}")
-                    
+
                 except PermissionError:
                     logger.debug(f"Permission denied listing parent directory: {parent_dir}")
-            
+
             # Try to get file stats
             try:
                 file_stat = os.stat(abs_file_path)
@@ -933,7 +933,7 @@ async def get_code_info(
             with open(abs_file_path, "r", encoding="utf-8") as f:
                 code_content = f.read()
                 logger.debug(f"Successfully read {len(code_content)} characters from file")
-                
+
         except FileNotFoundError as e:
             logger.error(f"=== FILE NOT FOUND ERROR ===")
             logger.error(f"Original file_path: {file_path}")

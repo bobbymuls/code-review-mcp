@@ -565,6 +565,80 @@ def chat_with_ai(user_input):
 
 ---
 
+## 📋 How to Use This MCP Tool - Template Prompt
+
+To get the most comprehensive and effective code reviews using this MCP tool, we recommend using this **hybrid methodology** that combines automated MCP tools with manual critical analysis:
+
+### 🎯 **Optimal Hybrid Code Review Prompt Template**
+
+```
+Please conduct a comprehensive code review of [filename] using both automated MCP tools and manual critical analysis. Structure your review using this hybrid methodology:
+
+**PHASE 1: Automated Comprehensive Scanning**
+- Run MCP general code review for syntax, style, and basic patterns (use full file path like "C:\\Users\\..." for file_path parameter)
+- Execute MCP security analysis for vulnerability detection (use full file path like "C:\\Users\\..." for file_path parameter)
+- Perform MCP performance analysis for optimization opportunities (use full file path like "C:\\Users\\..." for file_path parameter)
+- Conduct MCP API handling analysis for integration best practices (use full file path like "C:\\Users\\..." for file_path parameter)
+- [Add data processing analysis if applicable for data-heavy scripts] (use full file path like "C:\\Users\\..." for file_path parameter)
+
+**PHASE 2: Manual Critical Analysis**
+- Architecture review: Design patterns, coupling, global state, code organization
+- Security deep-dive: Hardcoded credentials, input validation, data exposure risks
+- Business logic validation: Domain rules, calculations, data flow correctness
+- Error handling strategy: Exception types, propagation, recovery patterns
+- Maintainability assessment: Code complexity, testability, documentation
+
+**PHASE 3: Synthesis & Cross-Validation**
+- Compare automated vs manual findings
+- Identify issues caught by only one method
+- Validate and prioritize by severity and business impact
+- Note any false positives or tool limitations
+
+**PHASE 4: Actionable Recommendations**
+- Immediate fixes: Specific line-level changes
+- Strategic improvements: Architecture and design enhancements  
+- Implementation priority: Critical → High → Medium → Low
+- Provide code examples for key improvements
+
+Please ensure you leverage the complementary strengths of both approaches: automated tools for comprehensive coverage and precise identification, manual analysis for context, domain understanding, and critical security/architecture issues that tools typically miss.
+```
+
+### 🎯 **Context-Specific Variations**
+
+**For Data Processing Scripts:**
+```
+"Please conduct a comprehensive code review of [filename] using both automated MCP tools and manual critical analysis. This is a data processing script that handles API calls, performs [specific domain] calculations, and processes [type] metrics. Pay special attention to data validation, API security, performance with large datasets, and business logic correctness for [domain-specific] calculations."
+```
+
+**For Web Applications:**
+```
+"Please conduct a comprehensive code review of [filename] using both automated MCP tools and manual critical analysis. This is a web application component that handles [functionality]. Focus particularly on security vulnerabilities, input validation, authentication/authorization, and web-specific performance concerns."
+```
+
+**For API Integration Code:**
+```
+"Please conduct a comprehensive code review of [filename] using both automated MCP tools and manual critical analysis. This code integrates with external APIs for [purpose]. Emphasize API security, error handling, retry logic, rate limiting, and data transformation accuracy."
+```
+
+### 🏆 **Why This Hybrid Approach Works**
+
+| Aspect | Automated Tools | Manual Analysis | Combined Benefit |
+|--------|----------------|-----------------|------------------|
+| **Coverage** | Comprehensive scanning | Deep, contextual | Complete assessment |
+| **Precision** | Exact line numbers | Strategic insights | Actionable specificity |
+| **Speed** | Instant analysis | Thoughtful review | Efficient thoroughness |
+| **Expertise** | Consistent rules | Domain knowledge | Balanced perspective |
+
+### 📝 **Best Practices**
+
+1. **Always specify the code type/domain** in your prompt for better context
+2. **Request both immediate fixes and strategic improvements**
+3. **Ask for cross-validation** between automated and manual findings
+4. **Emphasize areas of particular concern** based on the code's purpose
+5. **Request code examples** for recommended improvements
+
+---
+
 ## 🤝 Contributing
 
 We love contributions! Here's how to get started:
