@@ -113,57 +113,11 @@ pip install git+https://github.com/bobbymuls/code-review-mcp.git
 
 ---
 
-## 🗣️ How to Use in Cursor
+## 🗣️ How to Use in Cursor (With Template Prompts)
 
 Once installed, simply chat with Cursor using these prompts:
 
-### 🔍 **Quick Analysis Prompts**
 
-**General Code Review:**
-```
-"Please review this code for any issues"
-"Review the file src/components/Button.tsx"
-```
-
-**Security-Focused Analysis:**
-```
-"Check this code for security vulnerabilities"
-"Analyze security issues in src/auth/login.py"
-```
-
-**LLM Integration Analysis:**
-```
-"Use analyze_llm_invoke to review my OpenAI integration"
-"Check my prompt engineering for security issues"
-"Analyze this LLM code for cost optimization"
-```
-
-**API Handling Analysis:**
-```
-"Use analyze_api_handling to review my REST API code"
-"Check my API error handling and timeouts"
-"Analyze this fetch code for best practices"
-```
-
-**Performance Analysis:**
-```
-"Use check_performance to analyze my pandas DataFrame code"
-"Check this data processing code for optimization"
-"Analyze performance of utils/data-processing.js"
-```
-
-**Data Processing Analysis:**
-```
-"Use analyze_data_processing to review my data pipeline"
-"Check my pandas operations for memory efficiency"
-"Analyze this ETL code for optimization opportunities"
-```
-
----
-
-## 📋 Advanced Usage - Comprehensive Code Review Template
-
-For the most thorough and effective code reviews, use this **hybrid methodology** that combines automated MCP tools with manual critical analysis:
 
 ### 🎯 **Optimal Hybrid Code Review Prompt Template**
 
