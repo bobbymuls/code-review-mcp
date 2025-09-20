@@ -123,6 +123,11 @@ def get_compiled_patterns() -> Dict[str, List[Tuple[Pattern, str, str]]]:
                 "Hardcoded API key detected in configuration object",
             ),
             (
+                re.compile(r'["\'](?:api[_-]?key|access[_-]?token|secret[_-]?key|auth[_-]?token)["\']?\s*:\s*["\'][a-zA-Z0-9]{20,}["\']', re.IGNORECASE),
+                "critical",
+                "Hardcoded credential detected in configuration object",
+            ),
+            (
                 re.compile(r'baseURL["\']?\s*:\s*["\']https?://[^"\']*internal[^"\']*["\']', re.IGNORECASE),
                 "medium",
                 "Internal service URL exposure",
